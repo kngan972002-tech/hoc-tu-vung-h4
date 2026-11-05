@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Học từ vựng tiếng Trung H4</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--ink:#182235;--muted:#68758b;--blue:#3867e8;--line:#e4e9f2;--green:#16845b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:linear-gradient(120deg,#243f91,#5579ed);color:white;padding:24px max(18px,calc((100% - 1050px)/2))}
+h1{margin:0 0 6px;font-size:26px}header p{margin:0;opacity:.9}.wrap{max-width:1050px;margin:20px auto;padding:0 16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat,.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}.stat b{display:block;font-size:24px;color:var(--blue)}.stat span{font-size:13px;color:var(--muted)}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.tab,button,select,input{font:inherit;border-radius:10px;border:1px solid var(--line);padding:10px 13px;background:white;color:var(--ink)}button{cursor:pointer}.tab.active,.primary{background:var(--blue);color:white;border-color:var(--blue)}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.controls input{flex:1;min-width:170px}.panel{min-height:280px}.center{text-align:center}.word{font-size:52px;font-weight:700;margin:18px 0 4px}.pin{font-size:21px;color:var(--blue)}.meaning{font-size:21px;margin:20px 0}.muted{color:var(--muted)}.example{background:#f5f7fb;padding:12px;border-radius:10px;line-height:1.6}.actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:18px 0}.small{font-size:13px}.answer{display:block;width:100%;text-align:left;margin:8px 0}.good{border-color:#16845b;background:#eaf8f1}.bad{border-color:#d44;background:#fff0f0}.progress{height:9px;background:#e8edf6;border-radius:20px;overflow:hidden;margin:12px 0}.progress div{height:100%;background:#3867e8;width:0}.list{max-height:420px;overflow:auto}.item{display:grid;grid-template-columns:100px 1fr;gap:12px;padding:10px;border-bottom:1px solid var(--line)}.item b{font-size:20px}.hidden{display:none}
+@media(max-width:600px){.word{font-size:42px}.stats{gap:6px}.stat{padding:11px}.stat b{font-size:20px}.item{grid-template-columns:75px 1fr}}
+</style></head><body>
+<header><h1>📚 Học từ vựng tiếng Trung H4</h1><p>Học từng chút mỗi ngày — ôn lại để nhớ lâu.</p></header>
+<div class="wrap">
+<div class="stats"><div class="stat"><b id="total">841</b><span>Từ trong tài liệu</span></div><div class="stat"><b id="known">0</b><span>Đã đánh dấu thuộc</span></div><div class="stat"><b id="percent">0%</b><span>Tiến độ ghi nhớ</span></div></div>
+<div class="progress"><div id="bar"></div></div>
+<nav><button class="tab active" data-tab="flash">🃏 Thẻ ghi nhớ</button><button class="tab" data-tab="quiz">✍️ Trắc nghiệm</button><button class="tab" data-tab="write">⌨️ Luyện nhớ nghĩa</button><button class="tab" data-tab="all">📖 Danh sách từ</button></nav>
+<div class="controls"><input id="search" placeholder="Tìm chữ Hán, pinyin hoặc nghĩa..."><select id="book"><option value="all">Tất cả bài</option><option>THƯỢNG</option><option>HẠ</option><option>Bổ sung</option></select><button id="shuffle">Trộn từ</button></div>
+<section id="flash" class="panel center">
+<div class="muted small" id="counter"></div><div class="word" id="fword">你好</div><div class="pin" id="fpin"></div>
+<div id="reveal" class="hidden"><div class="meaning" id="fmeaning"></div><p class="muted" id="ftype"></p><div class="example" id="fexample"></div></div>
+<div class="actions"><button class="primary" id="show">Hiện nghĩa</button><button id="speak">🔊 Nghe phát âm</button></div>
+<div class="actions"><button id="again">↻ Chưa thuộc</button><button class="primary" id="master">✓ Đã thuộc</button><button id="next">Từ tiếp theo →</button></div>
+</section>
+<section id="quiz" class="panel hidden"><div class="muted" id="qcount"></div><h2 id="question">Chọn nghĩa đúng</h2><div id="choices"></div><p id="feedback"></p><button class="primary" id="qnext">Câu tiếp theo</button></section>
+<section id="write" class="panel hidden center"><div class="muted" id="wcount"></div><div class="word" id="wword"></div><div class="pin" id="wpin"></div><p>Hãy tự nhớ nghĩa tiếng Việt rồi kiểm tra.</p><input id="typed" placeholder="Nhập nghĩa tiếng Việt..." style="width:min(100%,480px)"><div class="actions"><button class="primary" id="check">Kiểm tra</button><button id="wnext">Từ khác</button></div><div id="wanswer"></div></section>
+<section id="all" class="panel hidden"><div class="list" id="wordlist"></div></section>
+<p class="muted small">Tiến độ được lưu trên trình duyệt của thiết bị này. Dùng cùng một trình duyệt để không mất tiến độ.</p>
+</div>
+<script>
+let words=[],pool=[],idx=0,qidx=0,widx=0,known=new Set(JSON.parse(localStorage.getItem('h4known')||'[]')),tab='flash';
+const $=id=>document.getElementById(id);
+fetch('words.json').then(r=>r.json()).then(data=>{words=data;pool=[...words];$('total').textContent=words.length;renderFlash();renderWrite();renderList();stats();});
+function filtered(){let q=$('search').value.toLowerCase(),b=$('book').value;return words.filter(x=>(b==='all'||x.book===b)&&[x.word,x.pinyin,x.meaning].join(' ').toLowerCase().includes(q))}
+function current(){return pool[idx%Math.max(pool.length,1)]}
+function renderFlash(){if(!pool.length){$('fword').textContent='Không có từ phù hợp';return}let x=current();$('counter').textContent=`${idx+1} / ${pool.length} · ${x.book}`;$('fword').textContent=x.word;$('fpin').textContent=x.pinyin;$('fmeaning').textContent=x.meaning;$('ftype').textContent=x.type;$('fexample').textContent=x.example||'Chưa có câu ví dụ';$('reveal').classList.add('hidden')}
+$('show').onclick=()=>$('reveal').classList.toggle('hidden');$('speak').onclick=()=>{let u=new SpeechSynthesisUtterance(current().word);u.lang='zh-CN';speechSynthesis.speak(u)};
+$('next').onclick=()=>{idx++;renderFlash()};$('again').onclick=()=>{idx++;renderFlash()};$('master').onclick=()=>{known.add(current().word);localStorage.setItem('h4known',JSON.stringify([...known]));stats();idx++;renderFlash()};
+function stats(){let n=known.size;$('known').textContent=n;$('percent').textContent=Math.round(n/Math.max(words.length,1)*100)+'%';$('bar').style.width=(n/Math.max(words.length,1)*100)+'%'}
+$('shuffle').onclick=()=>{pool=filtered().sort(()=>Math.random()-.5);idx=0;renderFlash();renderWrite();renderList()};
+$('search').oninput=()=>{$('shuffle').click()};$('book').onchange=()=>{$('shuffle').click()};
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');['flash','quiz','write','all'].forEach(t=>$(t).classList.toggle('hidden',t!==b.dataset.tab));tab=b.dataset.tab;if(tab==='quiz')newQuiz()});
+function newQuiz(){let a=filtered();if(!a.length)return;let x=a[Math.floor(Math.random()*a.length)];$('qcount').textContent='Chọn nghĩa đúng · '+x.book;$('question').textContent=x.word+' — '+x.pinyin;$('feedback').textContent='';let opts=[x,...a.filter(y=>y.word!==x.word).sort(()=>Math.random()-.5).slice(0,3)].sort(()=>Math.random()-.5);$('choices').innerHTML='';opts.forEach(o=>{let b=document.createElement('button');b.className='answer';b.textContent=o.meaning||'(Chưa có nghĩa)';b.onclick=()=>{$('feedback').textContent=o===x?'Chính xác! 🎉':'Chưa đúng. Đáp án: '+x.meaning;$('feedback').style.color=o===x?'green':'#c33';[...$('choices').children].forEach(c=>c.disabled=true)};$('choices').append(b)})}
+$('qnext').onclick=newQuiz;
+function renderWrite(){let a=filtered();let x=a[widx%Math.max(a.length,1)];if(!x)return;$('wcount').textContent=`${widx+1} / ${a.length}`;$('wword').textContent=x.word;$('wpin').textContent=x.pinyin;$('typed').value='';$('wanswer').textContent=''}
+$('check').onclick=()=>{let x=filtered()[widx%Math.max(filtered().length,1)];$('wanswer').textContent='Đáp án: '+(x?.meaning||'Chưa có nghĩa trong file')};$('wnext').onclick=()=>{widx++;renderWrite()};
+function renderList(){let a=filtered();$('wordlist').innerHTML='';a.forEach(x=>{let d=document.createElement('div');d.className='item';let left=document.createElement('div');left.innerHTML='<b></b><div class="muted small"></div>';left.children[0].textContent=x.word;left.children[1].textContent=x.pinyin;let right=document.createElement('div');right.textContent=(x.meaning||'Chưa có nghĩa')+' · '+x.book;d.append(left,right);$('wordlist').append(d)})}
+</script></body></html>
